@@ -36,6 +36,9 @@ impl TrieTree {
             self.children.push(Box::new(TrieTree::new_child(new_path)));
             return;
         }
+        if self.path == new_path {
+            return;
+        }
 
         let lcp = self.longest_common_prefix(new_path);
         // If length of longest common prefix is not 0, `self.path` cannot be `None`.
@@ -75,6 +78,29 @@ impl TrieTree {
             }
         }
     }
+
+    pub fn find(&self, key: &str) -> bool {
+        if key.len() == 0 {
+            return false;
+        }
+        let lcp = self.longest_common_prefix(key);
+        let key_remaining = &key[lcp..];
+        if key_remaining.len() == 0 {
+            return true;
+        }
+
+        for child in &self.children {
+            match (*child).path.chars().next() {
+                // Because more than 2 children node do not have same prefix,
+                // just check first character of key for each child.
+                Some(first_char) if first_char == key_remaining.chars().next().unwrap() => {
+                    return child.find(key_remaining);
+                }
+                _ => continue,
+            }
+        }
+        false
+    }
 }
 
 #[cfg(test)]
@@ -97,5 +123,43 @@ mod tests {
             children: Vec::new(),
         };
         assert_eq!(node_x.longest_common_prefix("abchoge"), 0);
+    }
+
+    #[test]
+    fn test_find() {
+        let mut tree = TrieTree::new();
+        let keys = vec!["/", "to", "tea", "ted", "ten", "i", "in", "inn"];
+        for key in &keys {
+            tree.insert(key);
+        }
+        for key in keys {
+            assert!(tree.find(key));
+        }
+    }
+
+    // Generate random alphanumeric string.
+    fn random_string() -> String {
+        extern crate rand;
+        use rand::distributions::Alphanumeric;
+        use rand::random;
+        use rand::Rng;
+        let length = random::<usize>() % 500 + 1;
+        rand::thread_rng()
+            .sample_iter(&Alphanumeric)
+            .take(length)
+            .collect::<String>()
+    }
+
+    #[test]
+    fn test_find_random() {
+        let mut tree = TrieTree::new();
+        let count = 1000;
+        let keys = (0..count).map(|_| random_string()).collect::<Vec<String>>();
+        for key in &keys {
+            tree.insert(key);
+        }
+        for key in keys {
+            assert!(tree.find(&key));
+        }
     }
 }
