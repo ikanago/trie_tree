@@ -4,13 +4,17 @@ use trie_tree::trie_tree::TrieTree;
 
 fn main() {
     let mut tree = TrieTree::new();
-    tree.insert("A");
-    tree.insert("to");
-    tree.insert("tea");
-    tree.insert("ted");
-    tree.insert("ten");
-    tree.insert("i");
-    tree.insert("in");
-    tree.insert("inn");
+    let paths = vec!["/", "/static/*"];
+    for key in &paths {
+        tree.add(key);
+    }
     dbg!(&tree);
+    let queries = vec![
+        "/static/index.html",
+        "/static/style.css",
+        "/static/index.js",
+    ];
+    for query in &queries {
+        assert!(tree.find(query));
+    }
 }
